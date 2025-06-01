@@ -1,4 +1,4 @@
-import MasterView from "../MasterMap/MasterView";
+import MasterView from "../MasterMap/MasterMapView";
 import Header from "../../Nav/Header/Header";
 import { Outlet, useLocation } from "react-router-dom";
 import "./../../../assets/styles/styles.css";
