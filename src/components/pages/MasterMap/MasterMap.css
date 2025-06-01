@@ -1,0 +1,141 @@
+/* MasterMap */
+body {
+  margin: 0px;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Toàn bộ chiều cao màn hình */
+    overflow: hidden;
+}
+  
+.header-container {
+  height: 50px; /* Chiều cao cố định của header */
+  flex-shrink: 0;
+  z-index: 1111;
+}
+  
+.main_container {
+  flex-grow: 1; /* Chiếm toàn bộ phần còn lại */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-top: 8.5px; 
+  width: 100%;
+}
+
+.app-content {
+  flex-grow: 1; /* Đảm bảo app-content chiếm toàn bộ không gian còn lại */
+  overflow: auto; /* Cho phép cuộn nếu cần trong app-content */
+}
+
+#cesiumContainer {
+  width: 100%;
+  height: 100%; /* Đảm bảo Cesium chiếm toàn bộ không gian */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* MasterView */
+.cesium-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.cesium-viewer {
+  width: 100%;
+  height: calc(100vh - 58px);
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: white;
+}
+
+/* Nút Open Modal nổi trên bản đồ */
+.floating-button {
+  position: absolute;
+  top: 15px;
+  left: 10px;
+  background-color: black;
+  z-index: 1000;
+  transition: background-color 0.3s ease; 
+}
+
+.floating-button:hover {
+  background-color: #333 !important; 
+  color: #fff !important; 
+}
+
+.custom-drawer {
+  position: absolute !important;
+  top: 60px !important;
+  height:  calc(100vh - 60px) !important; 
+}
+
+.filter-section {
+  display: flex;
+  align-items: center; 
+  gap: 20px; 
+}
+
+.filter-label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.icon-button {
+  margin-left: 10px;
+}
+
+.radio-group-inline {
+  display: flex; 
+  gap: 8px
+}
+
+
+
+
+
+
+/* Cesium Ion logo */
+.cesium-credit-logoContainer {
+  display: none !important;
+}
+.cesium-widget-credits {
+  display: none !important;
+}
+
+.custom-credit {
+  position: absolute;
+  bottom: 55px;
+  left: 1px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.scan3d {
+  height: 45px;
+}
+
+
+
+
