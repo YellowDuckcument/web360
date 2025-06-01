@@ -1,7 +1,7 @@
 import MasterView from "../MasterMap/MasterView";
 import Header from "../../Nav/Header/Header";
 import { Outlet, useLocation } from "react-router-dom";
-import "./MasterMap.css";
+import "./../../../assets/styles/styles.css";
 
 function MasterMap() {
   const location = useLocation(); 

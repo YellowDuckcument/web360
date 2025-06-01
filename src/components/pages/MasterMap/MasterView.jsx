@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import "./MasterMap.css";
+import "../../../assets/styles/styles.css";
 import { Button, Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 
