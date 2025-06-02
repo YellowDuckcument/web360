@@ -3,7 +3,7 @@ import Potree from "../PointCloud/Potree"
 function PointCloud() {
   return (
           <iframe
-              src="/src/components/pages/PointCloud/PotreeViewer.html"
+              src=""
               title="Potree Viewer"
               width="100%"
               height="100%"
