@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Vir360 from "../components/pages/Vir360/Vir360";
 import MasterMap from "../components/pages/MasterMap/MasterMap";
-import PointCloud from "../components/pages/PointCloud/PointCloud";
+// import PointCloud from "../components/pages/PointCloud/PointCloud";
 
 function AppRouter() {
   return (
@@ -9,7 +9,7 @@ function AppRouter() {
       <Routes>
         <Route path="/" element={<MasterMap />}>
           <Route index element={<div />} />
-          <Route path="pointcloud" element={<PointCloud />} />
+          {/* <Route path="pointcloud" element={<PointCloud />} /> */}
           <Route path="360" element={<Vir360 />} />
         </Route>
       </Routes>
