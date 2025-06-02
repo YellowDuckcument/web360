@@ -1,5 +1,6 @@
 import "./Header.css";
 import { NavLink } from "react-router-dom";
+import { Popover } from "antd";
 
 const Header = () => {
   return (
@@ -19,10 +20,25 @@ const Header = () => {
         </nav>
 
         {/* Address */}
+        
+        <Popover content={content} arrow={true} placement="top" overlayStyle={{ zIndex: 2000 }}>
         <div className="address" style={{fontWeight: "bold"}}>Toà nhà Gtel - 103 Nguyễn Tuân</div>
+        </Popover>
+
       </div>
     </header>
   );
 };
+
+const content = (
+  <div>
+    <div>- <strong>Tên công trình:</strong> Toà nhà Gtel - 103 Nguyễn Tuân</div>
+    <div>- <strong>Chủ đầu tư:</strong> GTel</div>
+    <div>- <strong>Địa chỉ:</strong> 103-105, Nguyễn Tuân, Phường Thanh Xuân Trung, Quận Thanh Xuân, Hà Nội.</div>
+    <div>- <strong>Tel:</strong> 0692326569</div>
+    <div>- <strong>Quy mô:</strong> </div>
+    <div>- <strong>Chức năng:</strong> Hiển thị tour 360, Mô hình mesh, mô hình BIM</div>
+  </div>
+);
 
 export default Header;
