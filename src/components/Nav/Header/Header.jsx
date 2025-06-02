@@ -7,13 +7,14 @@ const Header = () => {
       <div className="container">
         {/* Logo */}
         <div className="logo">
-            <img src="/images/logo_gtel.jpg" alt="logo3dscan" />
+            <img src="/public/images/logo_gtel.jpg" alt="logo3dscan" />
         </div>
 
         {/* Navigation */}
         <nav className="nav">
           <NavLink to="/">Master Map</NavLink>
-          {/* <NavLink to="/pointcloud">Point Cloud</NavLink> */}
+          <NavLink to="/bim">3D Bim</NavLink>
+          <NavLink to="/pointcloud">PointCloud</NavLink>
           <NavLink to="/360">Virtual 360</NavLink>
         </nav>
 

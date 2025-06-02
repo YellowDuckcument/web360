@@ -59,41 +59,32 @@ function MasterMap() {
 
       await tileSetsRef.current.tiles3D.readyPromise;
 
-      // const boundingSphere = tileSetsRef.current.tiles3D.boundingSphere;
+      const boundingSphere = tileSetsRef.current.tiles3D.boundingSphere;
 
-      const position = Cesium.Cartesian3.fromDegrees(105.854444, 21.028511, 45);
-      const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
-      tileSetsRef.current.tiles3D.modelMatrix = modelMatrix;
-
-      tileSetsRef.current.tiles3D.style = new Cesium.Cesium3DTileStyle({
-              color: "color('white') * 1.5",
+      viewer.camera.flyToBoundingSphere(boundingSphere, {
+              duration: 0,
+              offset: new Cesium.HeadingPitchRange(
+                Cesium.Math.toRadians(137.24),     //  hướng
+                Cesium.Math.toRadians(-30),     //  nhìn từ trên xuống
+                250                             //  khoảng cách camera
+              )
             });
 
-      viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(105.855790, 21.029338, 160.66), // cao hơn model để nhìn rõ
-      orientation: {
-        heading: Cesium.Math.toRadians(234.21), // hướng camera
-        pitch: Cesium.Math.toRadians(-42.68),   // góc nghiêng nhìn xuống model
-        roll: 0,
-      },
-      duration: 0, // thời gian bay mượt
-    });
-
-    viewer.camera.changed.addEventListener(() => {
-      const camera = viewer.camera;
-      const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
-      const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
-      const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
-      const height = cartographic.height.toFixed(2);
-        console.log({
-          destination: { longitude, latitude, height },
-          orientation: {
-            heading: Cesium.Math.toDegrees(camera.heading).toFixed(2),
-            pitch: Cesium.Math.toDegrees(camera.pitch).toFixed(2),
-            roll: Cesium.Math.toDegrees(camera.roll).toFixed(2),
-          },
-        });
-      });
+    // viewer.camera.changed.addEventListener(() => {
+    //   const camera = viewer.camera;
+    //   const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
+    //   const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
+    //   const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
+    //   const height = cartographic.height.toFixed(2);
+    //     console.log({
+    //       destination: { longitude, latitude, height },
+    //       orientation: {
+    //         heading: Cesium.Math.toDegrees(camera.heading).toFixed(2),
+    //         pitch: Cesium.Math.toDegrees(camera.pitch).toFixed(2),
+    //         roll: Cesium.Math.toDegrees(camera.roll).toFixed(2),
+    //       },
+    //     });
+    //   });
 
     }
 

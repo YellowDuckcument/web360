@@ -112,6 +112,7 @@ function Potree() {
       style={{ position: "absolute", width: "100%", height: "100%" }}
     >
       <div id="potree_render_area" />
+      <div id="potree_sidebar_container"></div>
     </div>
   );
 }
