@@ -331,7 +331,7 @@ a:hover,
 a:visited,
 a:link,
 a:active {
-	color: #ccccff;
+	/* color: #ccccff; */
 	text-decoration: none;
 }
 

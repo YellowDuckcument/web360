@@ -38,7 +38,7 @@
       $("#menu_scene").next().show();
     });
 
-    Potree.loadPointCloud("/public/models/pointcloud/test04/metadata.json", "Tòa nhà", (e) => {
+    Potree.loadPointCloud("/public/models/pointcloud/test02/metadata.json", "Tòa nhà", (e) => {
       const scene = viewer.scene;
       scene.addPointCloud(e.pointcloud);
       const material = e.pointcloud.material;

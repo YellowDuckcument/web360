@@ -13,7 +13,7 @@ const Header = () => {
         {/* Navigation */}
         <nav className="nav">
           <NavLink to="/">Master Map</NavLink>
-          <NavLink to="/pointcloud">Point Cloud</NavLink>
+          {/* <NavLink to="/pointcloud">Point Cloud</NavLink> */}
           <NavLink to="/360">Virtual 360</NavLink>
         </nav>
 
