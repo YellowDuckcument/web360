@@ -30,27 +30,27 @@ function Potree() {
     const initPotree = async () => {
       try {
         const cssList = [
-          "/src/components/pages/PointCloud/build/potree/potree.css",
-          "/src/libs/openlayers3/ol.css",
-          "/src/libs/spectrum/spectrum.css",
-          "/src/libs/jstree/themes/mixed/style.css",
-          "/src/libs/jquery-ui/jquery-ui.min.css",
+          "/libs/buildPotree/potree/potree.css",
+          "/libs/openlayers3/ol.css",
+          "/libs/spectrum/spectrum.css",
+          "/libs/jstree/themes/mixed/style.css",
+          "/libs/jquery-ui/jquery-ui.min.css",
         ];
         await Promise.all(cssList.map(loadCSS));
 
         const scriptList = [
-          "/src/libs/jquery/jquery-3.1.1.min.js",
-          "/src/libs/spectrum/spectrum.js",
-          "/src/libs/jquery-ui/jquery-ui.min.js",
-          "/src/libs/other/BinaryHeap.js",
-          "/src/libs/tween/tween.min.js",
-          "/src/libs/d3/d3.js",
-          "/src/libs/proj4/proj4.js",
-          "/src/libs/openlayers3/ol.js",
-          "/src/libs/i18next/i18next.js",
-          "/src/libs/jstree/jstree.js",
-          "/src/components/pages/PointCloud/build/potree/potree.js",
-          "/src/libs/plasio/js/laslaz.js",
+          "/libs/jquery/jquery-3.1.1.min.js",
+          "/libs/spectrum/spectrum.js",
+          "/libs/jquery-ui/jquery-ui.min.js",
+          "/libs/other/BinaryHeap.js",
+          "/libs/tween/tween.min.js",
+          "/libs/d3/d3.js",
+          "/libs/proj4/proj4.js",
+          "/libs/openlayers3/ol.js",
+          "/libs/i18next/i18next.js",
+          "/libs/jstree/jstree.js",
+          "/libs/buildPotree/potree/potree.js",
+          "/libs/plasio/js/laslaz.js",
         ];
         for (const src of scriptList) await loadScript(src);
 
