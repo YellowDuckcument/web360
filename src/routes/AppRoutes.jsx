@@ -4,7 +4,6 @@ import MasterMap from "../components/pages/MasterMap/MasterMap";
 import Bim from "../components/pages/BIM/BimModel";
 import PointCloud from "../components/pages/PointCloud/PointCloud";
 
-
 function AppRouter() {
   return (
     <BrowserRouter>

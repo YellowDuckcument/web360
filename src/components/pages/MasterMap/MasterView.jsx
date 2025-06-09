@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import "../../../assets/styles/styles.css";
 import { Button, Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 
-function MasterView() {
+function MasterMap() {
   const cesiumContainerRef = useRef(null);
   const viewerRef = useRef(null);
   const isInitialized = useRef(false);
-  const terrainProviderRef = useRef(null);
   const tileSetsRef = useRef({});
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -25,65 +23,90 @@ function MasterView() {
       if (!cesiumContainerRef.current || isInitialized.current) return;
       isInitialized.current = true;
 
-      if (!terrainProviderRef.current) {
-        terrainProviderRef.current = await Cesium.createWorldTerrainAsync();
-      }
-
       const viewer = new Cesium.Viewer(cesiumContainerRef.current, {
-        imageryProvider: new Cesium.OpenStreetMapImageryProvider(),
         scene3DOnly: true,
         requestRenderMode: true,
         timeline: false,
         animation: false,
-        vrButton: false,
-        sceneModePicker: false,
-        homeButton: false,
-        baseLayerPicker: true,
-        geocoder: false,
-        infoBox: false,
       });
 
       viewerRef.current = viewer;
 
-      // viewer.camera.changed.addEventListener(() => {
-      // const camera = viewer.camera;
-      // const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
-      // const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
-      // const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
-      // const height = cartographic.height.toFixed(2);
-      //   console.log({
-      //     destination: { longitude, latitude, height },
-      //     orientation: {
-      //       heading: Cesium.Math.toDegrees(camera.heading).toFixed(2),
-      //       pitch: Cesium.Math.toDegrees(camera.pitch).toFixed(2),
-      //       roll: Cesium.Math.toDegrees(camera.roll).toFixed(2),
-      //     },
-      //   });
-      // });
-
-      const position = Cesium.Cartesian3.fromDegrees(105.854444, 21.028511, 45);
-      const modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
-
-      const model = await Cesium.Model.fromGltfAsync({
-        url: "/models/130NT_NgoaiNha.glb",
-        modelMatrix,
-        scale: 1.5,
+      const tileset = await Cesium.Cesium3DTileset.fromUrl(
+        "models/Toa_nha_Gtel/Production_1.json"
+      );
+      Object.assign(tileset, {
+        maximumScreenSpaceError: 4,
+        maximumMemoryUsage: 2048,
       });
-      
-      model.style = new Cesium.Cesium3DTileStyle({
-        color: "color('white') * 1.5",
+      viewer.scene.primitives.add(tileset);
+
+      await tileset.readyPromise;
+
+      viewer.camera.flyToBoundingSphere(tileset.boundingSphere, {
+        duration: 1.5,
+        offset: new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(210),
+          Cesium.Math.toRadians(-20),
+          150
+        ),
       });
 
-      viewer.scene.primitives.add(model);
+      tileSetsRef.current.tiles3D = tileset;
 
-      viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(105.855459, 21.027410, 176.15),
-        orientation: {
-          heading: Cesium.Math.toRadians(321.60),     // hướng camera về phía Bắc
-          pitch: Cesium.Math.toRadians(-37.43),     // nghiêng xuống 30 độ
-          roll: 0,
-          duration: 0, 
-        },
+      // Gán trạng thái show ban đầu
+      tileset.show = tilesState.tiles3D;
+
+      await tileSetsRef.current.tiles3D.readyPromise;
+
+      const boundingSphere = tileset.boundingSphere;
+      const cartographic = Cesium.Cartographic.fromCartesian(
+        boundingSphere.center
+      );
+      const surface = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        0.0
+      );
+      const offset = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        7
+      ); // tăng 20m
+      const translation = Cesium.Cartesian3.subtract(
+        offset,
+        surface,
+        new Cesium.Cartesian3()
+      );
+      tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+      viewer.camera.flyToBoundingSphere(tileset.boundingSphere, {
+        duration: 0,
+        offset: new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(140.9),
+          Cesium.Math.toRadians(-41.47),
+          180
+        ),
+      });
+
+      viewer.camera.changed.addEventListener(() => {
+        const camera = viewer.camera;
+        const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
+        const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(
+          6
+        );
+        const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(
+          6
+        );
+        const height = cartographic.height.toFixed(2);
+        console.log({
+          destination: { longitude, latitude, height },
+          orientation: {
+            heading: Cesium.Math.toDegrees(camera.heading).toFixed(2),
+            pitch: Cesium.Math.toDegrees(camera.pitch).toFixed(2),
+            roll: Cesium.Math.toDegrees(camera.roll).toFixed(2),
+          },
+        });
       });
     }
 
@@ -93,6 +116,7 @@ function MasterView() {
       if (viewerRef.current) {
         viewerRef.current.destroy();
         viewerRef.current = null;
+        isInitialized.current = false;
       }
     };
   }, []);
@@ -100,8 +124,9 @@ function MasterView() {
   useEffect(() => {
     if (!tileSetsRef.current.tiles3D) return;
     tileSetsRef.current.tiles3D.show = tilesState.tiles3D;
+
     viewerRef.current.scene.requestRender();
-  }, [tilesState]);
+  }, [tilesState.tiles3D]);
 
   const zoomToTileSet = useCallback((key) => {
     if (viewerRef.current && tileSetsRef.current[key]) {
@@ -118,7 +143,7 @@ function MasterView() {
           {
             title: (
               <span>
-                Cesium 3D Tiles
+                City 3D Tiles
                 <Switch
                   style={{ marginLeft: 10 }}
                   size="small"
@@ -145,10 +170,6 @@ function MasterView() {
     <div className="cesium-container">
       <div ref={cesiumContainerRef} className="cesium-viewer"></div>
 
-      <div className="custom-credit">
-        <img src="/src/assets/images/logoblack.png" alt="Logo 3D Scan" className="scan3d"  />
-      </div>
-
       <Button type="primary" className="floating-button" onClick={showDrawer}>
         <SettingOutlined style={{ fontSize: "20px", zIndex: 1001 }} />
       </Button>
@@ -161,8 +182,7 @@ function MasterView() {
         mask={false}
         zIndex={1002}
         width={300}
-        className="custom-drawer"
-      >
+        className="custom-drawer">
         <Tree
           showLine
           defaultExpandAll
@@ -174,4 +194,4 @@ function MasterView() {
   );
 }
 
-export default MasterView;
+export default MasterMap;

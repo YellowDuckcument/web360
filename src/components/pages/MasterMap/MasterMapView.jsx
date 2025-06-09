@@ -45,8 +45,8 @@ function MasterMap() {
       const createTileSet = async (id, options = {}) => {
         const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(id);
         Object.assign(tileset, {
-          maximumScreenSpaceError: 2.5,
-          maximumMemoryUsage: 512,
+          maximumScreenSpaceError: 4,
+          maximumMemoryUsage: 2048,
           ...options,
         });
         viewer.scene.primitives.add(tileset);
@@ -101,33 +101,13 @@ function MasterMap() {
 
 
   useEffect(() => {
-    if (
-      !tileSetsRef.current.tiles3D ||
-      !tileSetsRef.current.google3DTiles ||
-      !tileSetsRef.current.pointCloud
-    )
-      return;
+  if (!tileSetsRef.current.tiles3D) return;
 
-    tileSetsRef.current.tiles3D.show = tilesState.tiles3D;
-    tileSetsRef.current.google3DTiles.show = tilesState.google3DTiles;
+  tileSetsRef.current.tiles3D.show = tilesState.tiles3D;
 
-    if (tilesState.pointCloud) {
-      tileSetsRef.current.pointCloud.show = true;
-      tileSetsRef.current.pointCloud.style = new Cesium.Cesium3DTileStyle({
-        show: "true",
-      });
-    } else {
-      tileSetsRef.current.pointCloud.style = new Cesium.Cesium3DTileStyle({
-        show: "false",
-      });
-      setTimeout(() => {
-        tileSetsRef.current.pointCloud.show = false;
-        viewerRef.current.scene.requestRender();
-      }, 100);
-    }
+  viewerRef.current.scene.requestRender();
+}, [tilesState.tiles3D]);
 
-    viewerRef.current.scene.requestRender();
-  }, [tilesState]);
 
   const zoomToTileSet = useCallback((key) => {
     if (viewerRef.current && tileSetsRef.current[key]) {
