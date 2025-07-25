@@ -2,15 +2,20 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import cesium from "vite-plugin-cesium";
 
-// https://vite.dev/config/
 export default defineConfig({
-  base: "./",
-  plugins: [react(), cesium()],
+  base: "/KTX/",  // ⚠️ frontend sẽ chạy dưới path này
+  plugins: [
+    react(),
+    cesium()
+  ],
+
   server: {
-    port: 3000,
+    host: true, 
+    allowedHosts: ["model.3dscan.vn"], 
+    port: 3004,
   },
 
   define: {
-    CESIUM_BASE_URL: JSON.stringify("/node_modules/cesium/Build/Cesium"),
+    CESIUM_BASE_URL: JSON.stringify("/Cesium")
   },
 });

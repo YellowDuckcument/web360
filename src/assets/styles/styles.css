@@ -14,7 +14,7 @@ body {
   height: 50px; /* Chiều cao cố định của header */
   flex-shrink: 0;
   z-index: 1111;
-}
+} 
   
 .main_container {
   flex-grow: 1; /* Chiếm toàn bộ phần còn lại */
@@ -88,6 +88,10 @@ body {
   position: absolute !important;
   top: 60px !important;
   height:  calc(100vh - 60px) !important; 
+} 
+
+.cesium-viewer-geocoderContainer {
+  display: none !important;
 }
 
 .filter-section {

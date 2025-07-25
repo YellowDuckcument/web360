@@ -34,7 +34,7 @@
 }
 
 .logo img {
-    height: 32px; 
+    height: 64px; 
     width: auto;
     object-fit: contain;
 }
@@ -85,9 +85,9 @@
     font-size: 18px;
     font-weight: 500;
     color: #333;
-    white-space: nowrap;
+    white-space: nowrap;    
     margin-left: auto;
-    margin-right: 150px; /* Cân đối khoảng cách với mép phải */
+    margin-right: 60px; /* Cân đối khoảng cách với mép phải */
     /* text-transform: uppercase; */
     letter-spacing: 1px;
 }

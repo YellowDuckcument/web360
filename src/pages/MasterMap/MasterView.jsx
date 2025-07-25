@@ -1,0 +1,201 @@
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import * as Cesium from "cesium";
+import "cesium/Build/Cesium/Widgets/widgets.css";
+import { Button, Drawer, Switch, Tree } from "antd";
+import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
+
+function MasterMap() {
+  const cesiumContainerRef = useRef(null);
+  const viewerRef = useRef(null);
+  const isInitialized = useRef(false);
+  const tileSetsRef = useRef({});
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [tilesState, setTilesState] = useState({
+    tiles3D: true,
+  });
+
+  const showDrawer = () => setIsDrawerOpen(true);
+  const closeDrawer = () => setIsDrawerOpen(false);
+
+  useEffect(() => {
+    async function initCesium() {
+      if (!cesiumContainerRef.current || isInitialized.current) return;
+      isInitialized.current = true;
+      // ✅ Thêm access token ở đây
+      Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZTY1N2NkNC03NjUyLTRjZWMtOGQ0MS1jZTI4MTQ3Zjk5YTUiLCJpZCI6Mjc2MjU3LCJpYXQiOjE3NTMyODAxODh9.dtI1O5YpwJx74URLAE8KyrJyk-f42tBoSfUACRRZ3Io";
+
+      const viewer = new Cesium.Viewer(cesiumContainerRef.current, {
+        // ✅ Sử dụng imagery vệ tinh từ Cesium Ion (World Imagery)
+        scene3DOnly: true,
+        requestRenderMode: true,
+        timeline: false,
+        animation: false,
+        baseLayerPicker: false,
+      });
+
+      viewerRef.current = viewer;
+
+      const tileset = await Cesium.Cesium3DTileset.fromUrl(
+        "https://gis.daces.vn/models/KTXHQG_KHUB_CESIUM/Scene/Production_2.json"
+      );
+      Object.assign(tileset, {
+        maximumScreenSpaceError: 4,
+        maximumMemoryUsage: 2048,
+      });
+      viewer.scene.primitives.add(tileset);
+
+      await tileset.readyPromise;
+
+      viewer.camera.flyToBoundingSphere(tileset.boundingSphere, {
+        duration: 1.5,
+        offset: new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(210),
+          Cesium.Math.toRadians(-20),
+          150
+        ),
+      });
+
+      tileSetsRef.current.tiles3D = tileset;
+
+      // Gán trạng thái show ban đầu
+      tileset.show = tilesState.tiles3D;
+
+      await tileSetsRef.current.tiles3D.readyPromise;
+
+      const boundingSphere = tileset.boundingSphere;
+      const cartographic = Cesium.Cartographic.fromCartesian(
+        boundingSphere.center
+      );
+      const surface = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        0.0
+      );
+      const offset = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        7
+      ); // tăng 20m
+      const translation = Cesium.Cartesian3.subtract(
+        offset,
+        surface,
+        new Cesium.Cartesian3()
+      );
+      tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+      viewer.camera.flyToBoundingSphere(tileset.boundingSphere, {
+        duration: 0,
+        offset: new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(140.9),
+          Cesium.Math.toRadians(-41.47),
+          180
+        ),
+      });
+
+      viewer.camera.changed.addEventListener(() => {
+        const camera = viewer.camera;
+        const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
+        const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(
+          6
+        );
+        const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(
+          6
+        );
+        const height = cartographic.height.toFixed(2);
+        console.log({
+          destination: { longitude, latitude, height },
+          orientation: {
+            heading: Cesium.Math.toDegrees(camera.heading).toFixed(2),
+            pitch: Cesium.Math.toDegrees(camera.pitch).toFixed(2),
+            roll: Cesium.Math.toDegrees(camera.roll).toFixed(2),
+          },
+        });
+      });
+    }
+
+    initCesium();
+
+    return () => {
+      if (viewerRef.current) {
+        viewerRef.current.destroy();
+        viewerRef.current = null;
+        isInitialized.current = false;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!tileSetsRef.current.tiles3D) return;
+    tileSetsRef.current.tiles3D.show = tilesState.tiles3D;
+
+    viewerRef.current.scene.requestRender();
+  }, [tilesState.tiles3D]);
+
+  const zoomToTileSet = useCallback((key) => {
+    if (viewerRef.current && tileSetsRef.current[key]) {
+      viewerRef.current.zoomTo(tileSetsRef.current[key]);
+    }
+  }, []);
+
+  const treeData = useMemo(
+    () => [
+      {
+        title: "3D Layers",
+        key: "3d-layers",
+        children: [
+          {
+            title: (
+              <span>
+                Model
+                <Switch
+                  style={{ marginLeft: 10 }}
+                  size="small"
+                  checked={tilesState.tiles3D}
+                  onChange={(checked) =>
+                    setTilesState((prev) => ({ ...prev, tiles3D: checked }))
+                  }
+                />
+                <ZoomInOutlined
+                  onClick={() => zoomToTileSet("tiles3D")}
+                  style={{ marginLeft: 10, cursor: "pointer" }}
+                />
+              </span>
+            ),
+            key: "tiles3D",
+          },
+        ],
+      },
+    ],
+    [tilesState, zoomToTileSet]
+  );
+
+  return (
+    <div className="cesium-container">
+      <div ref={cesiumContainerRef} className="cesium-viewer"></div>
+
+      <Button type="primary" className="floating-button" onClick={showDrawer}>
+        <SettingOutlined style={{ fontSize: "20px", zIndex: 1001 }} />
+      </Button>
+
+      <Drawer
+        title="Tùy chỉnh lớp hiển thị"
+        placement="left"
+        onClose={closeDrawer}
+        open={isDrawerOpen}
+        mask={false}
+        zIndex={1002}
+        width={300}
+        className="custom-drawer">
+        <Tree
+          showLine
+          defaultExpandAll
+          treeData={treeData}
+          selectable={false}
+        />
+      </Drawer>
+    </div>
+  );
+}
+
+export default MasterMap;
