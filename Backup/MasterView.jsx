@@ -13,7 +13,6 @@ function MasterMap() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [tilesState, setTilesState] = useState({
     tiles3D: true,
-    wmts: true,
   });
 
   const showDrawer = () => setIsDrawerOpen(true);
@@ -23,9 +22,11 @@ function MasterMap() {
     async function initCesium() {
       if (!cesiumContainerRef.current || isInitialized.current) return;
       isInitialized.current = true;
+      // ✅ Thêm access token ở đây
       Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZTY1N2NkNC03NjUyLTRjZWMtOGQ0MS1jZTI4MTQ3Zjk5YTUiLCJpZCI6Mjc2MjU3LCJpYXQiOjE3NTMyODAxODh9.dtI1O5YpwJx74URLAE8KyrJyk-f42tBoSfUACRRZ3Io";
 
       const viewer = new Cesium.Viewer(cesiumContainerRef.current, {
+        // ✅ Sử dụng imagery vệ tinh từ Cesium Ion (World Imagery)
         scene3DOnly: true,
         requestRenderMode: true,
         timeline: false,
@@ -42,8 +43,8 @@ function MasterMap() {
         maximumScreenSpaceError: 4,
         maximumMemoryUsage: 2048,
       });
-
       viewer.scene.primitives.add(tileset);
+
       await tileset.readyPromise;
 
       viewer.camera.flyToBoundingSphere(tileset.boundingSphere, {
@@ -56,14 +57,31 @@ function MasterMap() {
       });
 
       tileSetsRef.current.tiles3D = tileset;
+
+      // Gán trạng thái show ban đầu
       tileset.show = tilesState.tiles3D;
+
       await tileSetsRef.current.tiles3D.readyPromise;
 
       const boundingSphere = tileset.boundingSphere;
-      const cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
-      const surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
-      const offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 7);
-      const translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+      const cartographic = Cesium.Cartographic.fromCartesian(
+        boundingSphere.center
+      );
+      const surface = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        0.0
+      );
+      const offset = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        7
+      ); // tăng 20m
+      const translation = Cesium.Cartesian3.subtract(
+        offset,
+        surface,
+        new Cesium.Cartesian3()
+      );
       tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 
       viewer.camera.flyToBoundingSphere(tileset.boundingSphere, {
@@ -75,27 +93,15 @@ function MasterMap() {
         ),
       });
 
-      const wmtsLayer = viewer.imageryLayers.addImageryProvider(
-        new Cesium.WebMapTileServiceImageryProvider({
-          url: "https://model.3dscan.vn/api_wmts_KTX/geoserver/KTX/gwc/service/wmts",
-          layer: "KTX:AnhTrucGiao",
-          style: "",
-          format: "image/png",
-          tileMatrixSetID: "WebMercatorQuadx2",
-          maximumLevel: 22,
-          tilingScheme: new Cesium.WebMercatorTilingScheme(),
-          tileMatrixLabels: Array.from({ length: 23 }, (_, i) => `${i}`),
-        })
-      );
-
-      tileSetsRef.current.wmts = wmtsLayer;
-      wmtsLayer.show = tilesState.wmts;
-
       viewer.camera.changed.addEventListener(() => {
         const camera = viewer.camera;
         const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
-        const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
-        const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
+        const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(
+          6
+        );
+        const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(
+          6
+        );
         const height = cartographic.height.toFixed(2);
         console.log({
           destination: { longitude, latitude, height },
@@ -122,14 +128,9 @@ function MasterMap() {
   useEffect(() => {
     if (!tileSetsRef.current.tiles3D) return;
     tileSetsRef.current.tiles3D.show = tilesState.tiles3D;
+
     viewerRef.current.scene.requestRender();
   }, [tilesState.tiles3D]);
-
-  useEffect(() => {
-    if (!tileSetsRef.current.wmts) return;
-    tileSetsRef.current.wmts.show = tilesState.wmts;
-    viewerRef.current.scene.requestRender();
-  }, [tilesState.wmts]);
 
   const zoomToTileSet = useCallback((key) => {
     if (viewerRef.current && tileSetsRef.current[key]) {
@@ -163,22 +164,6 @@ function MasterMap() {
             ),
             key: "tiles3D",
           },
-          {
-            title: (
-              <span>
-                WMTS: Ảnh Trực Giao
-                <Switch
-                  style={{ marginLeft: 10 }}
-                  size="small"
-                  checked={tilesState.wmts}
-                  onChange={(checked) =>
-                    setTilesState((prev) => ({ ...prev, wmts: checked }))
-                  }
-                />
-              </span>
-            ),
-            key: "wmtsLayer",
-          },
         ],
       },
     ],
@@ -202,7 +187,12 @@ function MasterMap() {
         zIndex={1002}
         width={300}
         className="custom-drawer">
-        <Tree showLine defaultExpandAll treeData={treeData} selectable={false} />
+        <Tree
+          showLine
+          defaultExpandAll
+          treeData={treeData}
+          selectable={false}
+        />
       </Drawer>
     </div>
   );

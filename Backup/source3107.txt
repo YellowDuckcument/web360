@@ -84,7 +84,7 @@ function MasterMap() {
           tileMatrixSetID: "WebMercatorQuadx2",
           maximumLevel: 22,
           tilingScheme: new Cesium.WebMercatorTilingScheme(),
-          tileMatrixLabels: Array.from({ length: 23 }, (_, i) => `${i}`),
+          tileMatrixLabels: Array.from({ length: 23 }, (_, i) => ${i}),
         })
       );
 
