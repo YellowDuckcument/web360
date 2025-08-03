@@ -77,7 +77,7 @@ function MasterMap() {
 
       const wmtsLayer = viewer.imageryLayers.addImageryProvider(
         new Cesium.WebMapTileServiceImageryProvider({
-          url: "https://model.3dscan.vn/api_wmts_KTX/geoserver/KTX/gwc/service/wmts",
+          url: "https://model.3dscan.vn/api_wmts/geoserver/KTX/gwc/service/wmts",
           layer: "KTX:AnhTrucGiao",
           style: "",
           format: "image/png",
