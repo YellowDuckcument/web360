@@ -37,10 +37,8 @@ export default function MeasureToolbar({ viewer }) {
 
   const toggleMode = (newMode, actionFn) => {
     if (mode === newMode) {
-      clearDrawings();
       return;
     }
-    clearDrawings();
     setMode(newMode);
     viewer.scene.screenSpaceCameraController.enableRotate = false;
     actionFn();
@@ -49,33 +47,113 @@ export default function MeasureToolbar({ viewer }) {
   const startDistance = () => {
     const points = [];
     const temp = [];
+
     handlerRef.current.setInputAction((e) => {
       const pos = viewer.scene.pickPosition(e.position);
       viewer.scene.requestRender();
       if (!pos) return;
+
+      // Gán điểm A hoặc B
       points.push(pos);
       temp.push(
         viewer.entities.add({
           position: pos,
           point: { pixelSize: 10, color: Cesium.Color.YELLOW },
+          label: {
+            text: points.length === 1 ? "A" : "B",
+            font: "16px sans-serif",
+            fillColor: Cesium.Color.BLACK,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            outlineColor: Cesium.Color.WHITE,
+            pixelOffset: new Cesium.Cartesian2(10, -20),
+          },
         })
       );
+
       if (points.length === 2) {
+        const [A, B] = points;
+
+        // Tạo điểm C và D với Y = 0 (trên mặt đất)
+        const A_carto = Cesium.Cartographic.fromCartesian(A);
+        const B_carto = Cesium.Cartographic.fromCartesian(B);
+
+        const C = Cesium.Cartesian3.fromRadians(
+          A_carto.longitude,
+          A_carto.latitude,
+          0
+        );
+        const D = Cesium.Cartesian3.fromRadians(
+          B_carto.longitude,
+          B_carto.latitude,
+          0
+        );
+        viewer.scene.globe.depthTestAgainstTerrain = false;
+
         temp.push(
           viewer.entities.add({
             polyline: {
-              positions: points,
-              width: 3,
-              material: Cesium.Color.RED,
+              positions: [A, B],
+              width: 2,
+              material: Cesium.Color.WHITE,
+              // Cho phép hiển thị xuyên qua vật thể
+              clampToGround: false,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY, // Hiển thị ưu tiên
             },
           })
         );
-        const dist = Cesium.Cartesian3.distance(points[0], points[1]);
+
+        // Đường nét đứt: C - A và D - B (vuông góc từ mặt đất lên điểm đo)
+        const dashedMaterial = new Cesium.PolylineDashMaterialProperty({
+          color: Cesium.Color.RED,
+          dashLength: 16,
+        });
+
+        // Đường nét liền: C - D (trên mặt đất)
+        temp.push(
+          viewer.entities.add({
+            polyline: {
+              positions: [C, D],
+              width: 2,
+              material: dashedMaterial,
+              // Cho phép hiển thị xuyên qua vật thể
+              clampToGround: false,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY, // Hiển thị ưu tiên
+            },
+          })
+        );
+
+        temp.push(
+          viewer.entities.add({
+            polyline: {
+              positions: [C, A],
+              width: 2,
+              material: dashedMaterial,
+              // Cho phép hiển thị xuyên qua vật thể
+              clampToGround: false,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY, // Hiển thị ưu tiên
+            },
+          }),
+          viewer.entities.add({
+            polyline: {
+              positions: [D, B],
+              width: 2,
+              material: dashedMaterial,
+              // Cho phép hiển thị xuyên qua vật thể
+              clampToGround: false,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY, // Hiển thị ưu tiên
+            },
+          })
+        );
+
+        // Hiển thị khoảng cách AB
+        const dist = Cesium.Cartesian3.distance(A, B);
         const midpoint = Cesium.Cartesian3.midpoint(
-          points[0],
-          points[1],
+          A,
+          B,
           new Cesium.Cartesian3()
         );
+
         temp.push(
           viewer.entities.add({
             position: midpoint,
@@ -88,12 +166,16 @@ export default function MeasureToolbar({ viewer }) {
               outlineColor: Cesium.Color.BLACK,
               verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
               pixelOffset: new Cesium.Cartesian2(0, -20),
-              heightReference: Cesium.HeightReference.NONE, // hoặc RELATIVE_TO_GROUND nếu cần dính mặt đất
-              disableDepthTestDistance: Number.POSITIVE_INFINITY, // 🔥 Cực kỳ quan trọng để không bị che
+              heightReference: Cesium.HeightReference.NONE,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
             },
           })
         );
-        entitiesRef.current = temp;
+
+        // Lưu tất cả entity để sau này có thể clear
+        entitiesRef.current.push(...temp);
+
+        // Kết thúc đo
         handlerRef.current.removeInputAction(
           Cesium.ScreenSpaceEventType.LEFT_CLICK
         );
@@ -225,7 +307,7 @@ export default function MeasureToolbar({ viewer }) {
         );
       }
 
-      entitiesRef.current = temp;
+      entitiesRef.current.push(...temp);
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   };
 
@@ -236,9 +318,9 @@ export default function MeasureToolbar({ viewer }) {
       const pos = viewer.scene.pickPosition(e.position);
       viewer.scene.requestRender();
       if (!pos) return;
+
       pts.push(pos);
 
-      viewer.scene.requestRender();
       temp.push(
         viewer.entities.add({
           position: pos,
@@ -251,36 +333,82 @@ export default function MeasureToolbar({ viewer }) {
       );
 
       if (pts.length === 2) {
-        const h1 = Cesium.Ellipsoid.WGS84.cartesianToCartographic(
-          pts[0]
-        ).height;
-        const h2 = Cesium.Ellipsoid.WGS84.cartesianToCartographic(
-          pts[1]
-        ).height;
-        const dh = Math.abs(h1 - h2);
+        const [p1, p2] = pts;
+
+        // Lấy tọa độ Cartographic để xác định độ cao
+        const carto1 = Cesium.Ellipsoid.WGS84.cartesianToCartographic(p1);
+        const carto2 = Cesium.Ellipsoid.WGS84.cartesianToCartographic(p2);
+
+        const h1 = carto1.height;
+        const h2 = carto2.height;
+
+        // Xác định điểm A (thấp hơn) và B (cao hơn)
+        const A = h1 < h2 ? p1 : p2;
+        const B = h1 < h2 ? p2 : p1;
+
+        const cartoA = Cesium.Ellipsoid.WGS84.cartesianToCartographic(A);
+        const cartoB = Cesium.Ellipsoid.WGS84.cartesianToCartographic(B);
+
+        // Tạo điểm C (kế thừa kinh độ & vĩ độ của B, nhưng cao độ của A)
+        const C_carto = new Cesium.Cartographic(
+          cartoB.longitude,
+          cartoB.latitude,
+          cartoA.height
+        );
+        const C = Cesium.Ellipsoid.WGS84.cartographicToCartesian(C_carto);
+
+        // Nối tam giác A–C–B
+        const CA = [C, A];
+        const CB = [C, B];
+        const AB = [A, B];
+
+        const dashedMaterial = new Cesium.PolylineDashMaterialProperty({
+          color: Cesium.Color.BLUE,
+          dashLength: 8,
+        });
+
+        // Vẽ đường nét đứt CA
         temp.push(
           viewer.entities.add({
             polyline: {
-              positions: pts,
+              positions: CA,
               width: 2,
-              material: Cesium.Color.MAGENTA,
+              material: dashedMaterial,
             },
           })
         );
 
-        viewer.scene.requestRender();
-        const mid = Cesium.Cartesian3.midpoint(
-          pts[0],
-          pts[1],
-          new Cesium.Cartesian3()
-        );
-
-        viewer.scene.requestRender();
+        // Vẽ đường nét liền CB
         temp.push(
           viewer.entities.add({
-            position: mid,
+            polyline: {
+              positions: CB,
+              width: 2,
+              material: Cesium.Color.BLUE,
+            },
+          })
+        );
+
+        // Vẽ đường nét liền AB
+        temp.push(
+          viewer.entities.add({
+            polyline: {
+              positions: AB,
+              width: 1,
+              material: Cesium.Color.BLUE,
+            },
+          })
+        );
+
+        // Label ΔH tại trung điểm CB
+        const midCB = Cesium.Cartesian3.midpoint(C, B, new Cesium.Cartesian3());
+        const deltaH = Math.abs(cartoB.height - cartoA.height);
+
+        temp.push(
+          viewer.entities.add({
+            position: midCB,
             label: {
-              text: `ΔH: ${dh.toFixed(2)} m`,
+              text: `ΔH: ${deltaH.toFixed(2)} m`,
               font: "20px sans-serif",
               fillColor: Cesium.Color.YELLOW,
               style: Cesium.LabelStyle.FILL_AND_OUTLINE,
@@ -288,18 +416,68 @@ export default function MeasureToolbar({ viewer }) {
               outlineColor: Cesium.Color.BLACK,
               verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
               pixelOffset: new Cesium.Cartesian2(0, -20),
-              heightReference: Cesium.HeightReference.NONE, // hoặc RELATIVE_TO_GROUND nếu cần dính mặt đất
-              disableDepthTestDistance: Number.POSITIVE_INFINITY, // 🔥 Cực kỳ quan trọng để không bị che
+              heightReference: Cesium.HeightReference.NONE,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
             },
           })
         );
-        viewer.scene.requestRender();
-        entitiesRef.current = temp;
+
+        // Vẽ ký hiệu góc vuông tại C (một đoạn nhỏ tạo hình chữ L)
+        const symbolSize = 1.0;
+
+        const rightAngleSymbol = (() => {
+          const v1 = Cesium.Cartesian3.subtract(A, C, new Cesium.Cartesian3());
+          const v2 = Cesium.Cartesian3.subtract(B, C, new Cesium.Cartesian3());
+
+          Cesium.Cartesian3.normalize(v1, v1);
+          Cesium.Cartesian3.normalize(v2, v2);
+
+          // Tạo 2 điểm nhỏ dọc theo v1 và v2 để vẽ ký hiệu
+          const p1 = Cesium.Cartesian3.add(
+            C,
+            Cesium.Cartesian3.multiplyByScalar(
+              v1,
+              symbolSize,
+              new Cesium.Cartesian3()
+            ),
+            new Cesium.Cartesian3()
+          );
+          const p2 = Cesium.Cartesian3.add(
+            C,
+            Cesium.Cartesian3.multiplyByScalar(
+              v2,
+              symbolSize,
+              new Cesium.Cartesian3()
+            ),
+            new Cesium.Cartesian3()
+          );
+          const corner = Cesium.Cartesian3.add(
+            p1,
+            Cesium.Cartesian3.subtract(p2, C, new Cesium.Cartesian3()),
+            new Cesium.Cartesian3()
+          );
+
+          return [p1, corner, p2];
+        })();
+
+        temp.push(
+          viewer.entities.add({
+            polyline: {
+              positions: rightAngleSymbol,
+              width: 2,
+              material: Cesium.Color.MAGENTA,
+            },
+          })
+        );
+
+        // Lưu và dọn
+        entitiesRef.current.push(...temp);
         handlerRef.current.removeInputAction(
           Cesium.ScreenSpaceEventType.LEFT_CLICK
         );
         viewer.scene.screenSpaceCameraController.enableRotate = true;
         setMode(null);
+        viewer.scene.requestRender();
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
   };
