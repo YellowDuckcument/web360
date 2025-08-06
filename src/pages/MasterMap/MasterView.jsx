@@ -3,6 +3,7 @@ import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import { Button, Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
+import MeasureToolbar from "./MeasureToolbar";
 
 function MasterMap() {
   const cesiumContainerRef = useRef(null);
@@ -23,7 +24,8 @@ function MasterMap() {
     async function initCesium() {
       if (!cesiumContainerRef.current || isInitialized.current) return;
       isInitialized.current = true;
-      Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZTY1N2NkNC03NjUyLTRjZWMtOGQ0MS1jZTI4MTQ3Zjk5YTUiLCJpZCI6Mjc2MjU3LCJpYXQiOjE3NTMyODAxODh9.dtI1O5YpwJx74URLAE8KyrJyk-f42tBoSfUACRRZ3Io";
+      Cesium.Ion.defaultAccessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZTY1N2NkNC03NjUyLTRjZWMtOGQ0MS1jZTI4MTQ3Zjk5YTUiLCJpZCI6Mjc2MjU3LCJpYXQiOjE3NTMyODAxODh9.dtI1O5YpwJx74URLAE8KyrJyk-f42tBoSfUACRRZ3Io";
 
       const viewer = new Cesium.Viewer(cesiumContainerRef.current, {
         scene3DOnly: true,
@@ -60,10 +62,24 @@ function MasterMap() {
       await tileSetsRef.current.tiles3D.readyPromise;
 
       const boundingSphere = tileset.boundingSphere;
-      const cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
-      const surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
-      const offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 7);
-      const translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+      const cartographic = Cesium.Cartographic.fromCartesian(
+        boundingSphere.center
+      );
+      const surface = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        0.0
+      );
+      const offset = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        cartographic.latitude,
+        7
+      );
+      const translation = Cesium.Cartesian3.subtract(
+        offset,
+        surface,
+        new Cesium.Cartesian3()
+      );
       tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 
       viewer.camera.flyToBoundingSphere(tileset.boundingSphere, {
@@ -94,8 +110,12 @@ function MasterMap() {
       viewer.camera.changed.addEventListener(() => {
         const camera = viewer.camera;
         const cartographic = Cesium.Cartographic.fromCartesian(camera.position);
-        const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
-        const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
+        const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(
+          6
+        );
+        const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(
+          6
+        );
         const height = cartographic.height.toFixed(2);
         console.log({
           destination: { longitude, latitude, height },
@@ -189,6 +209,9 @@ function MasterMap() {
     <div className="cesium-container">
       <div ref={cesiumContainerRef} className="cesium-viewer"></div>
 
+      {/* ✅ Measure Toolbar */}
+      {viewerRef.current && <MeasureToolbar viewer={viewerRef.current} />}
+
       <Button type="primary" className="floating-button" onClick={showDrawer}>
         <SettingOutlined style={{ fontSize: "20px", zIndex: 1001 }} />
       </Button>
@@ -202,7 +225,12 @@ function MasterMap() {
         zIndex={1002}
         width={300}
         className="custom-drawer">
-        <Tree showLine defaultExpandAll treeData={treeData} selectable={false} />
+        <Tree
+          showLine
+          defaultExpandAll
+          treeData={treeData}
+          selectable={false}
+        />
       </Drawer>
     </div>
   );
