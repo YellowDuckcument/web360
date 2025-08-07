@@ -94,6 +94,10 @@ body {
   display: none !important;
 }
 
+.cesium-home-button {
+  display: none !important;
+}
+
 .filter-section {
   display: flex;
   align-items: center; 

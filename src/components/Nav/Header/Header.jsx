@@ -8,23 +8,28 @@ const Header = () => {
       <div className="container">
         {/* Logo */}
         <div className="logo">
-            <img src="images/logo3dscan.png" alt="logo3dscan" />
+          <img src="images/logo3dscan.png" alt="logo3dscan" />
         </div>
 
         {/* Navigation */}
         <nav className="nav">
           <NavLink to="/">Master Map</NavLink>
-          <NavLink to="/bim">3D Bim</NavLink>
+          {/* <NavLink to="/bim">3D Bim</NavLink>
           <NavLink to="/pointcloud">PointCloud</NavLink>
-          <NavLink to="/360">Virtual 360</NavLink>
+          <NavLink to="/360">Virtual 360</NavLink> */}
         </nav>
 
         {/* Address */}
-        
-        <Popover content={content} arrow={true} placement="top" overlayStyle={{ zIndex: 2000 }}>
-        <div className="address" style={{fontWeight: "bold"}}>3DSCAN VIET NAM</div>
-        </Popover>
 
+        <Popover
+          content={content}
+          arrow={true}
+          placement="top"
+          overlayStyle={{ zIndex: 2000 }}>
+          <div className="address" style={{ fontWeight: "bold" }}>
+            3DSCAN VIET NAM
+          </div>
+        </Popover>
       </div>
     </header>
   );

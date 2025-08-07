@@ -6,6 +6,8 @@ import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 import MeasureToolbar from "./MeasureToolbar";
 import ClippingPlaneControl from "./ClippingPlaneControl";
 import ExportClippingToPDFButton from "./ExportClippingToPDFButton";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome } from "@fortawesome/free-solid-svg-icons";
 
 function MasterMap() {
   const cesiumContainerRef = useRef(null);
@@ -213,6 +215,44 @@ function MasterMap() {
   return (
     <div className="cesium-container">
       <div ref={cesiumContainerRef} className="cesium-viewer"></div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: 50,
+          right: 8,
+          zIndex: 1000,
+          background: "rgba(255, 255, 255, 0.8)",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          padding: 5,
+          borderRadius: 5,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          alignItems: "center",
+          backdropFilter: "blur(6px)",
+          width: 32, // giữ độ rộng gọn gàng như cũ
+        }}>
+        <button
+          onClick={() => zoomToTileSet("tiles3D")}
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            border: "1px solid rgba(0,0,0,0.1)",
+            cursor: "pointer",
+            padding: 10,
+            borderRadius: 5,
+            borderColor: "gray",
+            transition: "background 0.2s, color 0.2s",
+            fontSize: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 30,
+            height: 30,
+          }}>
+          <FontAwesomeIcon icon={faHome} style={{ color: "black" }} />
+        </button>
+      </div>
 
       {/* ✅ Measure Toolbar (tool đo) */}
       {viewerRef.current && <MeasureToolbar viewer={viewerRef.current} />}
