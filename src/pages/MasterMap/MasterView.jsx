@@ -5,6 +5,7 @@ import { Button, Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 import MeasureToolbar from "./MeasureToolbar";
 import ClippingPlaneControl from "./ClippingPlaneControl";
+import ExportClippingToPDFButton from "./ExportClippingToPDFButton";
 
 function MasterMap() {
   const cesiumContainerRef = useRef(null);
@@ -12,7 +13,7 @@ function MasterMap() {
   const isInitialized = useRef(false);
   const tileSetsRef = useRef({});
   const [loadedTileset, setLoadedTileset] = useState(null);
-  const [clippingEnabled, setClippingEnabled] = useState(false);
+  // const [clippingEnabled, setClippingEnabled] = useState(false);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [tilesState, setTilesState] = useState({
@@ -223,6 +224,12 @@ function MasterMap() {
           tileset={loadedTileset}
         />
       )}
+      {/* {viewerRef.current && loadedTileset && (
+        <ExportClippingToPDFButton
+          viewer={viewerRef.current}
+          clipEntities={entitiesRef.current}
+        />
+      )} */}
 
       {/* Nút cài đặt mở drawer */}
       <Button type="primary" className="floating-button" onClick={showDrawer}>
@@ -238,8 +245,7 @@ function MasterMap() {
         mask={false}
         zIndex={1002}
         width={300}
-        className="custom-drawer"
-      >
+        className="custom-drawer">
         <Tree
           showLine
           defaultExpandAll

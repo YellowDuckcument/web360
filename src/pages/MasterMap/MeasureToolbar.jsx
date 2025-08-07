@@ -23,23 +23,92 @@ export default function MeasureToolbar({ viewer }) {
   }, [viewer]);
 
   const clearDrawings = () => {
-    entitiesRef.current.forEach((e) => viewer.entities.remove(e));
+    // Xóa toàn bộ entity đã lưu
+    entitiesRef.current.forEach((e) => {
+      try {
+        viewer.entities.remove(e);
+      } catch (err) {
+        // Có thể log nếu cần
+        console.warn("Lỗi khi xóa entityRef:", err);
+      }
+    });
     entitiesRef.current = [];
-    setMode(null);
+
+    // Xóa tất cả entity hiện tại trong viewer.entities mà không lọc
+    const allEntities = viewer.entities.values.slice();
+    allEntities.forEach((entity) => {
+      try {
+        viewer.entities.remove(entity);
+      } catch (err) {
+        // Có thể log nếu cần
+        console.warn("Lỗi khi xóa entityRef:", err);
+      }
+    });
+
+    // Xóa tất cả input actions
     if (handlerRef.current) {
       handlerRef.current.removeInputAction(
         Cesium.ScreenSpaceEventType.LEFT_CLICK
       );
+      handlerRef.current.removeInputAction(
+        Cesium.ScreenSpaceEventType.MOUSE_MOVE
+      );
+      handlerRef.current.removeInputAction(
+        Cesium.ScreenSpaceEventType.RIGHT_CLICK
+      );
     }
 
-    viewer.scene.requestRender();
+    // Gỡ tất cả event listener (ví dụ ESC)
+    document.onkeydown = null;
+
+    // Cho phép xoay lại camera
     viewer.scene.screenSpaceCameraController.enableRotate = true;
+
+    // Reset mode
+    setMode(null);
+
+    // Render lại
+    viewer.scene.requestRender();
   };
 
   const toggleMode = (newMode, actionFn) => {
+    // Nếu đang ở cùng chế độ -> thoát chế độ đo
     if (mode === newMode) {
+      // Xoay lại camera
+      viewer.scene.screenSpaceCameraController.enableRotate = true;
+
+      // Xóa input actions của chế độ hiện tại
+      if (handlerRef.current) {
+        handlerRef.current.removeInputAction(
+          Cesium.ScreenSpaceEventType.LEFT_CLICK
+        );
+        handlerRef.current.removeInputAction(
+          Cesium.ScreenSpaceEventType.MOUSE_MOVE
+        );
+        handlerRef.current.removeInputAction(
+          Cesium.ScreenSpaceEventType.RIGHT_CLICK
+        );
+      }
+
+      // Đặt lại chế độ
+      setMode(null);
       return;
     }
+
+    // Nếu đang ở chế độ khác → thoát chế độ cũ trước
+    if (handlerRef.current) {
+      handlerRef.current.removeInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_CLICK
+      );
+      handlerRef.current.removeInputAction(
+        Cesium.ScreenSpaceEventType.MOUSE_MOVE
+      );
+      handlerRef.current.removeInputAction(
+        Cesium.ScreenSpaceEventType.RIGHT_CLICK
+      );
+    }
+
+    // Bật chế độ mới
     setMode(newMode);
     viewer.scene.screenSpaceCameraController.enableRotate = false;
     actionFn();
@@ -122,7 +191,7 @@ export default function MeasureToolbar({ viewer }) {
                 pos,
                 currentMousePosition
               );
-              return `${(distance / 1000).toFixed(2)} km`;
+              return `${distance.toFixed(2)} m`;
             }, false),
             font: "18px sans-serif",
             fillColor: Cesium.Color.YELLOW,
@@ -213,7 +282,7 @@ export default function MeasureToolbar({ viewer }) {
           viewer.entities.add({
             position: midpoint,
             label: {
-              text: `${(dist / 1000).toFixed(2)} km`,
+              text: `${dist.toFixed(2)} m`,
               font: "20px sans-serif",
               fillColor: Cesium.Color.YELLOW,
               style: Cesium.LabelStyle.FILL_AND_OUTLINE,
@@ -241,78 +310,18 @@ export default function MeasureToolbar({ viewer }) {
   const startArea = () => {
     const pts = [];
     const temp = [];
-    let previewLineEntity = null;
-    let previewLabelEntity = null;
+
     let polygonEntity = null;
+    let areaLabelEntity = null;
 
-    const handler = handlerRef.current;
-    viewer.scene.screenSpaceCameraController.enableRotate = false;
-
-    const calculateArea = (positions) => {
-      const cartographics = positions.map(Cesium.Cartographic.fromCartesian);
-      const radius = 6378137.0; // WGS84 Earth radius
-      let area = 0;
-      const len = cartographics.length;
-      for (let i = 0; i < len; i++) {
-        const p1 = cartographics[i];
-        const p2 = cartographics[(i + 1) % len];
-        area +=
-          (p2.longitude - p1.longitude) *
-          (2 + Math.sin(p1.latitude) + Math.sin(p2.latitude));
-      }
-      return Math.abs((area * radius * radius) / 2.0);
-    };
-
-    handler.setInputAction((e) => {
-      const pos = viewer.scene.pickPosition(e.endPosition);
-      if (!pos || pts.length === 0) return;
-
-      const lastPt = pts[pts.length - 1];
-      const distance = Cesium.Cartesian3.distance(lastPt, pos);
-      const mid = Cesium.Cartesian3.midpoint(
-        lastPt,
-        pos,
-        new Cesium.Cartesian3()
-      );
-
-      viewer.scene.requestRender();
-
-      if (previewLineEntity) viewer.entities.remove(previewLineEntity);
-      if (previewLabelEntity) viewer.entities.remove(previewLabelEntity);
-
-      previewLineEntity = viewer.entities.add({
-        polyline: {
-          positions: [lastPt, pos],
-          width: 2,
-          material: Cesium.Color.YELLOW,
-        },
-      });
-
-      previewLabelEntity = viewer.entities.add({
-        position: mid,
-        label: {
-          text: `${distance.toFixed(1)} m`,
-          font: "16px sans-serif",
-          fillColor: Cesium.Color.YELLOW,
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          outlineWidth: 2,
-          outlineColor: Cesium.Color.BLACK,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -20),
-          heightReference: Cesium.HeightReference.NONE,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        },
-      });
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
-    handler.setInputAction((e) => {
+    handlerRef.current.setInputAction((e) => {
       const pos = viewer.scene.pickPosition(e.position);
+      viewer.scene.requestRender();
       if (!pos) return;
 
       pts.push(pos);
-      viewer.scene.requestRender();
 
-      // Point
+      // Vẽ điểm
       temp.push(
         viewer.entities.add({
           position: pos,
@@ -321,30 +330,32 @@ export default function MeasureToolbar({ viewer }) {
       );
 
       const len = pts.length;
+
       if (len >= 2) {
         const a = pts[len - 2];
         const b = pts[len - 1];
         const mid = Cesium.Cartesian3.midpoint(a, b, new Cesium.Cartesian3());
         const distance = Cesium.Cartesian3.distance(a, b);
 
-        // Line
+        // Vẽ đoạn thẳng
         temp.push(
           viewer.entities.add({
             polyline: {
               positions: [a, b],
               width: 2,
               material: Cesium.Color.RED,
+              clampToGround: false,
             },
           })
         );
 
-        // Label
+        // Ghi nhãn độ dài
         temp.push(
           viewer.entities.add({
             position: mid,
             label: {
               text: `${distance.toFixed(1)} m`,
-              font: "16px sans-serif",
+              font: "18px sans-serif",
               fillColor: Cesium.Color.YELLOW,
               style: Cesium.LabelStyle.FILL_AND_OUTLINE,
               outlineWidth: 2,
@@ -358,84 +369,69 @@ export default function MeasureToolbar({ viewer }) {
         );
       }
 
-      // Vẽ polygon động
-      if (polygonEntity) viewer.entities.remove(polygonEntity);
-      polygonEntity = viewer.entities.add({
-        polygon: {
-          hierarchy: new Cesium.PolygonHierarchy([...pts]),
-          material: Cesium.Color.CYAN.withAlpha(0.3),
-        },
-      });
-      temp.push(polygonEntity);
+      // Cập nhật polygon nếu đủ 3 điểm
+      if (len >= 3) {
+        if (polygonEntity) {
+          viewer.entities.remove(polygonEntity);
+        }
 
-      // Tính diện tích nếu đủ 3 điểm
-      if (pts.length >= 3) {
-        const area = calculateArea(pts);
+        polygonEntity = viewer.entities.add({
+          polygon: {
+            hierarchy: new Cesium.PolygonHierarchy(pts),
+            material: Cesium.Color.CYAN.withAlpha(0.4),
+            heightReference: Cesium.HeightReference.NONE,
+          },
+        });
+        temp.push(polygonEntity);
+
+        // Tính diện tích
+        const cartos = pts.map((p) =>
+          Cesium.Ellipsoid.WGS84.cartesianToCartographic(p)
+        );
+
+        let area = 0;
+        for (let i = 0; i < cartos.length; i++) {
+          const c1 = cartos[i];
+          const c2 = cartos[(i + 1) % cartos.length];
+          area +=
+            (c2.longitude - c1.longitude) *
+            (2 + Math.sin(c1.latitude) + Math.sin(c2.latitude));
+        }
+        area = (Math.abs(area) * Cesium.Ellipsoid.WGS84.maximumRadius ** 2) / 2;
+
+        // Tính tâm polygon
         const center = pts.reduce(
           (acc, cur) => Cesium.Cartesian3.add(acc, cur, acc),
           new Cesium.Cartesian3()
         );
         Cesium.Cartesian3.divideByScalar(center, pts.length, center);
 
-        // Xóa label cũ nếu có
-        temp
-          .filter(
-            (ent) =>
-              ent.label?.text?.getValue?.()?.includes("Area:") ||
-              ent.properties?.type?.getValue?.() === "areaLabel"
-          )
-          .forEach((ent) => viewer.entities.remove(ent));
+        // Xóa label cũ
+        if (areaLabelEntity) {
+          viewer.entities.remove(areaLabelEntity);
+        }
 
-        // Label diện tích
-        temp.push(
-          viewer.entities.add({
-            position: center,
-            label: {
-              text: `Area: ${area.toFixed(2)} m²`,
-              font: "20px sans-serif",
-              fillColor: Cesium.Color.YELLOW,
-              style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-              outlineWidth: 2,
-              outlineColor: Cesium.Color.BLACK,
-              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-              pixelOffset: new Cesium.Cartesian2(0, -20),
-              heightReference: Cesium.HeightReference.NONE,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            },
-            properties: {
-              type: "areaLabel",
-            },
-          })
-        );
+        areaLabelEntity = viewer.entities.add({
+          position: center,
+          label: {
+            text: `Area: ${area.toFixed(2)} m²`,
+            font: "20px sans-serif",
+            fillColor: Cesium.Color.YELLOW,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            outlineColor: Cesium.Color.BLACK,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -20),
+            heightReference: Cesium.HeightReference.NONE,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+
+        temp.push(areaLabelEntity);
       }
 
-      // Cleanup dynamic line and label
-      if (previewLineEntity) {
-        viewer.entities.remove(previewLineEntity);
-        previewLineEntity = null;
-      }
-      if (previewLabelEntity) {
-        viewer.entities.remove(previewLabelEntity);
-        previewLabelEntity = null;
-      }
-
-      entitiesRef.current.push(...temp);
+      entitiesRef.current = temp;
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-    // ESC để hủy
-    const escListener = (e) => {
-      if (e.key === "Escape") {
-        handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-        handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        document.removeEventListener("keydown", escListener);
-        if (previewLineEntity) viewer.entities.remove(previewLineEntity);
-        if (previewLabelEntity) viewer.entities.remove(previewLabelEntity);
-        temp.forEach((ent) => viewer.entities.remove(ent));
-        viewer.scene.screenSpaceCameraController.enableRotate = true;
-        setMode(null); // hoặc set state đang đo = null
-      }
-    };
-    document.addEventListener("keydown", escListener);
   };
 
   const startHeight = () => {
@@ -717,7 +713,7 @@ export default function MeasureToolbar({ viewer }) {
       style={{
         position: "absolute",
         top: 100,
-        right: 5,
+        right: 8,
         zIndex: 1000,
         background: "rgba(255, 255, 255, 0.8)",
         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
@@ -728,8 +724,7 @@ export default function MeasureToolbar({ viewer }) {
         gap: 8,
         alignItems: "center",
         backdropFilter: "blur(6px)",
-      }}
-    >
+      }}>
       {buttons.map((btn, idx) => {
         const isDelete = btn.icon === faTrash;
         const isActive = isDelete ? mode === null : mode === btn.mode;
@@ -739,8 +734,7 @@ export default function MeasureToolbar({ viewer }) {
             key={idx}
             style={{ position: "relative" }}
             onMouseEnter={() => setHoveredTooltip(idx)}
-            onMouseLeave={() => setHoveredTooltip(null)}
-          >
+            onMouseLeave={() => setHoveredTooltip(null)}>
             <button
               onClick={btn.action}
               style={{
@@ -783,8 +777,7 @@ export default function MeasureToolbar({ viewer }) {
                     ? "rgba(255,0,0,0.1)"
                     : "transparent";
                 }
-              }}
-            >
+              }}>
               <FontAwesomeIcon icon={btn.icon} />
             </button>
 
@@ -805,8 +798,7 @@ export default function MeasureToolbar({ viewer }) {
                   zIndex: 1001,
                   opacity: 0.95,
                   boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                }}
-              >
+                }}>
                 {btn.tooltip}
               </div>
             )}
