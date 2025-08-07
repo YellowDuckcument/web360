@@ -4,12 +4,15 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { Button, Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 import MeasureToolbar from "./MeasureToolbar";
+import ClippingPlaneControl from "./ClippingPlaneControl";
 
 function MasterMap() {
   const cesiumContainerRef = useRef(null);
   const viewerRef = useRef(null);
   const isInitialized = useRef(false);
   const tileSetsRef = useRef({});
+  const [loadedTileset, setLoadedTileset] = useState(null);
+  const [clippingEnabled, setClippingEnabled] = useState(false);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [tilesState, setTilesState] = useState({
@@ -58,6 +61,7 @@ function MasterMap() {
       });
 
       tileSetsRef.current.tiles3D = tileset;
+      setLoadedTileset(tileset);
       tileset.show = tilesState.tiles3D;
       await tileSetsRef.current.tiles3D.readyPromise;
 
@@ -73,7 +77,7 @@ function MasterMap() {
       const offset = Cesium.Cartesian3.fromRadians(
         cartographic.longitude,
         cartographic.latitude,
-        7
+        0
       );
       const translation = Cesium.Cartesian3.subtract(
         offset,
@@ -209,13 +213,23 @@ function MasterMap() {
     <div className="cesium-container">
       <div ref={cesiumContainerRef} className="cesium-viewer"></div>
 
-      {/* ✅ Measure Toolbar */}
+      {/* ✅ Measure Toolbar (tool đo) */}
       {viewerRef.current && <MeasureToolbar viewer={viewerRef.current} />}
 
+      {/* ✅ Clipping Plane Control */}
+      {viewerRef.current && loadedTileset && (
+        <ClippingPlaneControl
+          viewer={viewerRef.current}
+          tileset={loadedTileset}
+        />
+      )}
+
+      {/* Nút cài đặt mở drawer */}
       <Button type="primary" className="floating-button" onClick={showDrawer}>
         <SettingOutlined style={{ fontSize: "20px", zIndex: 1001 }} />
       </Button>
 
+      {/* Drawer cấu hình lớp */}
       <Drawer
         title="Tùy chỉnh lớp hiển thị"
         placement="left"
@@ -224,7 +238,8 @@ function MasterMap() {
         mask={false}
         zIndex={1002}
         width={300}
-        className="custom-drawer">
+        className="custom-drawer"
+      >
         <Tree
           showLine
           defaultExpandAll
