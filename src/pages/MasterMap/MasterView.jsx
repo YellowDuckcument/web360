@@ -5,7 +5,7 @@ import { Button, Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 import MeasureToolbar from "./MeasureToolbar";
 import ClippingPlaneControl from "./ClippingPlaneControl";
-import ExportClippingToPDFButton from "./ExportClippingToPDFButton";
+import PositionControl from "./PositionControl";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
 
@@ -264,12 +264,11 @@ function MasterMap() {
           tileset={loadedTileset}
         />
       )}
-      {/* {viewerRef.current && loadedTileset && (
-        <ExportClippingToPDFButton
-          viewer={viewerRef.current}
-          clipEntities={entitiesRef.current}
-        />
-      )} */}
+
+      {/* Nút cài đặt mở nâng hạ mô hình */}
+      {viewerRef.current && loadedTileset && (
+        <PositionControl viewer={viewerRef.current} tileset={loadedTileset} />
+      )}
 
       {/* Nút cài đặt mở drawer */}
       <Button type="primary" className="floating-button" onClick={showDrawer}>
