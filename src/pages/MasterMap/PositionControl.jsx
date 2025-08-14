@@ -10,9 +10,9 @@ const PositionControl = ({ tileset }) => {
   const [showSlider, setShowSlider] = useState(false);
   const [showXYZForm, setShowXYZForm] = useState(false);
   const [offsetHeight, setOffsetHeight] = useState(0);
-
   const baseHeightRef = useRef(null);
   const [xyz, setXyz] = useState({ x: 0, y: 0, z: 0 });
+  const [hoveredButton, setHoveredButton] = useState(null);
 
   // Lấy độ cao và tọa độ gốc khi load
   useEffect(() => {
@@ -107,7 +107,7 @@ const PositionControl = ({ tileset }) => {
       <div
         style={{
           position: "absolute",
-          top: 380,
+          top: 410,
           right: 8,
           zIndex: 1000,
           background: "rgba(255, 255, 255, 0.8)",
@@ -120,29 +120,58 @@ const PositionControl = ({ tileset }) => {
           alignItems: "center",
           backdropFilter: "blur(6px)",
           width: 32,
-        }}>
+        }}
+      >
         {buttons.map((btn, idx) => (
-          <button
+          <div
             key={idx}
-            onClick={btn.onClick}
-            title={btn.tooltip}
-            style={{
-              backgroundColor: btn.active ? "#007BFF" : "transparent",
-              color: btn.active ? "white" : "#333",
-              border: "1px solid rgba(0,0,0,0.1)",
-              cursor: "pointer",
-              padding: 10,
-              borderRadius: 5,
-              transition: "background 0.2s, color 0.2s",
-              fontSize: 16,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 30,
-              height: 30,
-            }}>
-            <FontAwesomeIcon icon={btn.icon} />
-          </button>
+            style={{ position: "relative" }}
+            onMouseEnter={() => setHoveredButton(idx)}
+            onMouseLeave={() => setHoveredButton(null)}
+          >
+            <button
+              onClick={btn.onClick}
+              style={{
+                backgroundColor: btn.active ? "#007BFF" : "transparent",
+                color: btn.active ? "white" : "#333",
+                border: "1px solid rgba(0,0,0,0.1)",
+                cursor: "pointer",
+                padding: 10,
+                borderRadius: 5,
+                transition: "background 0.2s, color 0.2s",
+                fontSize: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 30,
+                height: 30,
+              }}
+            >
+              <FontAwesomeIcon icon={btn.icon} />
+            </button>
+
+            {/* Tooltip custom */}
+            {hoveredButton === idx && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: "110%",
+                  transform: "translateY(-50%)",
+                  background: "black",
+                  color: "white",
+                  padding: "4px 8px",
+                  borderRadius: 4,
+                  fontSize: 12,
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                  zIndex: 1001,
+                }}
+              >
+                {btn.tooltip}
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
@@ -160,7 +189,8 @@ const PositionControl = ({ tileset }) => {
             borderRadius: 8,
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
             backdropFilter: "blur(6px)",
-          }}>
+          }}
+        >
           <div
             style={{
               fontSize: 14,
@@ -168,7 +198,8 @@ const PositionControl = ({ tileset }) => {
               textAlign: "center",
               fontWeight: "bold",
               color: "darkgray",
-            }}>
+            }}
+          >
             Nâng/Hạ mô hình:{" "}
             {(baseHeightRef.current ?? 0 + offsetHeight).toFixed(2)} m
           </div>
@@ -197,41 +228,92 @@ const PositionControl = ({ tileset }) => {
             transform: "translateX(-50%)",
             zIndex: 1000,
             background: "rgba(255, 255, 255, 0.95)",
-            padding: "10px 15px",
-            borderRadius: 8,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+            padding: "20px 24px",
+            borderRadius: 12,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
             backdropFilter: "blur(6px)",
-          }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            color: "#222",
+            fontFamily: "Segoe UI, sans-serif",
+            minWidth: 200,
+          }}
+        >
+          {/* Title */}
+          <h3
+            style={{
+              margin: 0,
+              marginBottom: 12,
+              fontSize: 16,
+              fontWeight: 700,
+              textAlign: "center",
+              color: "#222",
+            }}
+          >
+            Nhập tọa độ XYZ
+          </h3>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {["x", "y", "z"].map((coord) => (
-              <div key={coord}>
-                <label style={{ fontSize: 12, fontWeight: "bold" }}>
-                  {coord.toUpperCase()}:
+              <div
+                key={coord}
+                style={{ display: "flex", flexDirection: "column" }}
+              >
+                <label
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    marginBottom: 4,
+                  }}
+                >
+                  Nhập {coord.toUpperCase()}:
                 </label>
                 <input
                   type="number"
                   value={xyz[coord]}
                   onChange={(e) => setXyz({ ...xyz, [coord]: e.target.value })}
                   style={{
-                    width: "100%",
-                    padding: 4,
+                    width: "85%",
+                    padding: "8px 10px",
                     border: "1px solid #ccc",
-                    borderRadius: 4,
+                    borderRadius: 6,
+                    fontSize: 14,
+                    outline: "none",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#007BFF";
+                    e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.2)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#ccc";
+                    e.target.style.boxShadow = "none";
                   }}
                 />
               </div>
             ))}
+
             <button
               onClick={updateXYZ}
               style={{
-                marginTop: 8,
+                marginTop: 6,
                 backgroundColor: "#007BFF",
                 color: "white",
-                padding: "6px 12px",
+                padding: "8px 12px",
                 border: "none",
-                borderRadius: 4,
+                borderRadius: 6,
                 cursor: "pointer",
-              }}>
+                fontSize: 14,
+                fontWeight: 600,
+                transition: "background-color 0.2s, transform 0.15s",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#0056b3";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "#007BFF";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
               Cập nhật vị trí
             </button>
           </div>

@@ -167,7 +167,7 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
       <div
         style={{
           position: "absolute",
-          top: 260,
+          top: 290,
           right: 8,
           zIndex: 1000,
           background: "rgba(255, 255, 255, 0.8)",
@@ -180,7 +180,8 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
           alignItems: "center",
           backdropFilter: "blur(6px)",
           width: 32, // giữ độ rộng gọn gàng như cũ
-        }}>
+        }}
+      >
         {buttons.map((btn, idx) => {
           const isActive = activeAxis === btn.axis;
           return (
@@ -188,7 +189,8 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
               key={btn.axis}
               style={{ position: "relative" }}
               onMouseEnter={() => setHoveredTooltip(idx)}
-              onMouseLeave={() => setHoveredTooltip(null)}>
+              onMouseLeave={() => setHoveredTooltip(null)}
+            >
               <button
                 onClick={() => toggleClippingPlane(btn.axis)}
                 style={{
@@ -213,7 +215,8 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
                 onMouseOut={(e) => {
                   if (!isActive)
                     e.currentTarget.style.backgroundColor = "transparent";
-                }}>
+                }}
+              >
                 <FontAwesomeIcon icon={btn.icon} />
               </button>
 
@@ -234,7 +237,8 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
                     zIndex: 1001,
                     opacity: 0.95,
                     boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                  }}>
+                  }}
+                >
                   {btn.tooltip}
                 </div>
               )}
@@ -260,7 +264,8 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
             display: "flex",
             flexDirection: "column",
             alignItems: "stretch",
-          }}>
+          }}
+        >
           <div
             style={{
               fontSize: 14,
@@ -268,7 +273,8 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
               textAlign: "center",
               fontWeight: "bold",
               color: "darkgray",
-            }}>
+            }}
+          >
             Độ sâu mặt cắt: {distanceState.toFixed(1)}
           </div>
           <input

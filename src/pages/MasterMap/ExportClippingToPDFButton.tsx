@@ -22,16 +22,13 @@ export default function ExportClippingToPDFButton({
       const scene = viewer.scene;
 
       // Zoom đến entity
-      viewer.flyTo(entity, {
-        duration: 0.5,
-        complete: () => {
-          scene.render(); // render lại trước khi chụp
-          setTimeout(() => {
-            const canvas = scene.canvas;
-            const imageData = canvas.toDataURL("image/png");
-            resolve(imageData);
-          }, 300); // delay nhẹ để đảm bảo flyTo xong
-        },
+      viewer.flyTo(entity, { duration: 0.5 }).then(() => {
+        scene.render(); // render lại trước khi chụp
+        setTimeout(() => {
+          const canvas = scene.canvas;
+          const imageData = canvas.toDataURL("image/png");
+          resolve(imageData);
+        }, 300); // delay nhẹ để đảm bảo flyTo xong
       });
     });
   };
@@ -86,7 +83,8 @@ export default function ExportClippingToPDFButton({
         padding: "8px 12px",
         borderRadius: 8,
         boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-      }}>
+      }}
+    >
       <button
         onClick={handleExport}
         disabled={exporting}
@@ -98,7 +96,8 @@ export default function ExportClippingToPDFButton({
           transition: "background 0.2s, color 0.2s",
           fontSize: 14,
           background: "#f0f0f0",
-        }}>
+        }}
+      >
         <FontAwesomeIcon icon={faFilePdf} style={{ marginRight: 6 }} />
 
         {exporting ? "Đang xuất..." : "Xuất ảnh PDF từ các điểm cắt"}

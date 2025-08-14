@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
-import { Button, Drawer, Switch, Tree } from "antd";
+import { Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 import MeasureToolbar from "./MeasureToolbar";
 import ClippingPlaneControl from "./ClippingPlaneControl";
@@ -15,16 +15,17 @@ function MasterMap() {
   const isInitialized = useRef(false);
   const tileSetsRef = useRef({});
   const [loadedTileset, setLoadedTileset] = useState(null);
-  // const [clippingEnabled, setClippingEnabled] = useState(false);
-
+  const [showTooltip, setShowTooltip] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [tilesState, setTilesState] = useState({
     tiles3D: true,
     wmts: true,
   });
 
-  const showDrawer = () => setIsDrawerOpen(true);
-  const closeDrawer = () => setIsDrawerOpen(false);
+  // ✅ Toggle Drawer
+  const toggleDrawer = () => {
+    setIsDrawerOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     async function initCesium() {
@@ -216,6 +217,7 @@ function MasterMap() {
     <div className="cesium-container">
       <div ref={cesiumContainerRef} className="cesium-viewer"></div>
 
+      {/* ✅ Khung chứa Home + Setting */}
       <div
         style={{
           position: "absolute",
@@ -231,33 +233,104 @@ function MasterMap() {
           gap: 8,
           alignItems: "center",
           backdropFilter: "blur(6px)",
-          width: 32, // giữ độ rộng gọn gàng như cũ
-        }}>
-        <button
-          onClick={() => zoomToTileSet("tiles3D")}
-          style={{
-            backgroundColor: "rgba(255, 255, 255, 0.8)",
-            border: "1px solid rgba(0,0,0,0.1)",
-            cursor: "pointer",
-            padding: 10,
-            borderRadius: 5,
-            borderColor: "gray",
-            transition: "background 0.2s, color 0.2s",
-            fontSize: 16,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 30,
-            height: 30,
-          }}>
-          <FontAwesomeIcon icon={faHome} style={{ color: "black" }} />
-        </button>
+          width: 32,
+        }}
+      >
+        {/* Nút Home */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => zoomToTileSet("tiles3D")}
+            style={{
+              backgroundColor: "transparent",
+              border: "1px solid rgba(0,0,0,0.1)",
+              cursor: "pointer",
+              padding: 10,
+              borderRadius: 5,
+              transition: "background 0.2s, color 0.2s",
+              fontSize: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 30,
+              height: 30,
+              color: "#333",
+            }}
+            onMouseEnter={() => setShowTooltip("home")}
+            onMouseLeave={() => setShowTooltip(null)}
+          >
+            <FontAwesomeIcon icon={faHome} />
+          </button>
+          {/* Tooltip */}
+          <div
+            style={{
+              position: "absolute",
+              right: "110%",
+              top: "50%",
+              transform: "translateY(-50%)",
+              backgroundColor: "black",
+              color: "white",
+              padding: "5px 10px",
+              borderRadius: 6,
+              fontSize: 12,
+              whiteSpace: "nowrap",
+              opacity: showTooltip === "home" ? 0.95 : 0,
+              pointerEvents: "none",
+              transition: "opacity 0.2s",
+            }}
+          >
+            Vị trí ban đầu
+          </div>
+        </div>
+
+        {/* Nút Setting */}
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={toggleDrawer}
+            style={{
+              backgroundColor: "transparent",
+              border: "1px solid rgba(0,0,0,0.1)",
+              cursor: "pointer",
+              padding: 10,
+              borderRadius: 5,
+              transition: "background 0.2s, color 0.2s",
+              fontSize: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 30,
+              height: 30,
+              color: "#333",
+            }}
+            onMouseEnter={() => setShowTooltip("setting")}
+            onMouseLeave={() => setShowTooltip(null)}
+          >
+            <SettingOutlined />
+          </button>
+          {/* Tooltip */}
+          <div
+            style={{
+              position: "absolute",
+              right: "110%",
+              top: "50%",
+              transform: "translateY(-50%)",
+              backgroundColor: "black",
+              color: "white",
+              padding: "5px 10px",
+              borderRadius: 6,
+              fontSize: 12,
+              whiteSpace: "nowrap",
+              opacity: showTooltip === "setting" ? 0.95 : 0,
+              pointerEvents: "none",
+              transition: "opacity 0.2s",
+            }}
+          >
+            Cài đặt
+          </div>
+        </div>
       </div>
 
-      {/* ✅ Measure Toolbar (tool đo) */}
       {viewerRef.current && <MeasureToolbar viewer={viewerRef.current} />}
 
-      {/* ✅ Clipping Plane Control */}
       {viewerRef.current && loadedTileset && (
         <ClippingPlaneControl
           viewer={viewerRef.current}
@@ -265,26 +338,21 @@ function MasterMap() {
         />
       )}
 
-      {/* Nút cài đặt mở nâng hạ mô hình */}
       {viewerRef.current && loadedTileset && (
         <PositionControl viewer={viewerRef.current} tileset={loadedTileset} />
       )}
-
-      {/* Nút cài đặt mở drawer */}
-      <Button type="primary" className="floating-button" onClick={showDrawer}>
-        <SettingOutlined style={{ fontSize: "20px", zIndex: 1001 }} />
-      </Button>
 
       {/* Drawer cấu hình lớp */}
       <Drawer
         title="Tùy chỉnh lớp hiển thị"
         placement="left"
-        onClose={closeDrawer}
+        onClose={() => setIsDrawerOpen(false)}
         open={isDrawerOpen}
         mask={false}
         zIndex={1002}
         width={300}
-        className="custom-drawer">
+        className="custom-drawer"
+      >
         <Tree
           showLine
           defaultExpandAll

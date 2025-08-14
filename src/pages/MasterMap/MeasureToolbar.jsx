@@ -712,7 +712,7 @@ export default function MeasureToolbar({ viewer }) {
     <div
       style={{
         position: "absolute",
-        top: 100,
+        top: 132,
         right: 8,
         zIndex: 1000,
         background: "rgba(255, 255, 255, 0.8)",
@@ -724,7 +724,8 @@ export default function MeasureToolbar({ viewer }) {
         gap: 8,
         alignItems: "center",
         backdropFilter: "blur(6px)",
-      }}>
+      }}
+    >
       {buttons.map((btn, idx) => {
         const isDelete = btn.icon === faTrash;
         const isActive = isDelete ? mode === null : mode === btn.mode;
@@ -734,7 +735,8 @@ export default function MeasureToolbar({ viewer }) {
             key={idx}
             style={{ position: "relative" }}
             onMouseEnter={() => setHoveredTooltip(idx)}
-            onMouseLeave={() => setHoveredTooltip(null)}>
+            onMouseLeave={() => setHoveredTooltip(null)}
+          >
             <button
               onClick={btn.action}
               style={{
@@ -777,7 +779,8 @@ export default function MeasureToolbar({ viewer }) {
                     ? "rgba(255,0,0,0.1)"
                     : "transparent";
                 }
-              }}>
+              }}
+            >
               <FontAwesomeIcon icon={btn.icon} />
             </button>
 
@@ -798,7 +801,8 @@ export default function MeasureToolbar({ viewer }) {
                   zIndex: 1001,
                   opacity: 0.95,
                   boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                }}>
+                }}
+              >
                 {btn.tooltip}
               </div>
             )}
