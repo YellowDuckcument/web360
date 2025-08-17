@@ -86,7 +86,9 @@ function MasterMap() {
       if (!cesiumContainerRef.current || isInitialized.current) return;
       isInitialized.current = true;
 
-      Cesium.Ion.defaultAccessToken = "YOUR_TOKEN_HERE";
+      Cesium.Ion.defaultAccessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZTY1N2NkNC03NjUyLTRjZWMtOGQ0MS1jZTI4MTQ3Zjk5YTUiLCJpZCI6Mjc2MjU3LCJpYXQiOjE3NTMyODAxODh9.dtI1O5YpwJx74URLAE8KyrJyk-f42tBoSfUACRRZ3Io";
+      // Cesium.Ion.defaultAccessToken = "YOUR_TOKEN_HERE";
       const viewer = new Cesium.Viewer(cesiumContainerRef.current, {
         scene3DOnly: true,
         requestRenderMode: true,
