@@ -5,6 +5,7 @@ import "../../assets/styles/styles.css";
 
 function MasterMap() {
   const location = useLocation();
+  
   return (
     <div className="app-container">
       {/* Header */}

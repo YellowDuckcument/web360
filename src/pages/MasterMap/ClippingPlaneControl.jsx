@@ -51,7 +51,8 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
             plane.distance = targetDistance.current;
             return plane;
           }
-          return new Cesium.ClippingPlane(currentNormal.current, 0);
+        // Nếu không có plane thì return null thay vì tạo mới liên tục
+        return null;
         }, false),
       },
     });
@@ -61,7 +62,7 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
     const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction((movement) => {
       const picked = scene.pick(movement.position);
-      if (Cesium.defined(picked?.id?.plane)) {
+      if (picked?.id && picked.id === planeEntityRef.current) {
         selectedPlane.current = picked.id.plane;
         selectedPlane.current.material = Cesium.Color.WHITE.withAlpha(0.05);
         scene.screenSpaceCameraController.enableInputs = false;
@@ -92,11 +93,12 @@ const ClippingPlaneControl = ({ viewer, tileset }) => {
 
   const removeClippingPlane = () => {
     try {
-      if (tileset.clippingPlanes) {
-        tileset.clippingPlanes.removeAll();
-        tileset.clippingPlanes.enabled = false;
-        tileset.clippingPlanes = undefined;
+      if (planeEntityRef.current) {
+        planeEntityRef.current.plane.plane = undefined; // ngắt CallbackProperty
+        viewer.entities.remove(planeEntityRef.current);
+        planeEntityRef.current = null;
       }
+
 
       if (planeEntityRef.current) {
         viewer.entities.remove(planeEntityRef.current);

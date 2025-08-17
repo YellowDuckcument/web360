@@ -5,7 +5,7 @@ import { Drawer, Switch, Tree } from "antd";
 import { SettingOutlined, ZoomInOutlined } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome } from "@fortawesome/free-solid-svg-icons";
-
+import "../../assets/styles/styles.css";
 import MeasureToolbar from "./MeasureToolbar";
 import ClippingPlaneControl from "./ClippingPlaneControl";
 import PositionControl from "./PositionControl";
@@ -71,6 +71,7 @@ function MasterMap() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [tilesState, setTilesState] = useState({ tiles3D: true, wmts: true });
 
+
   const toggleDrawer = useCallback(() => {
     setIsDrawerOpen((prev) => !prev);
   }, []);
@@ -86,24 +87,46 @@ function MasterMap() {
       if (!cesiumContainerRef.current || isInitialized.current) return;
       isInitialized.current = true;
 
+      
+      // // ✅ Check WebGL trước khi tạo Viewer
+      // if (!Cesium.FeatureDetection.supportsWebGL()) {
+      //   alert("Thiết bị/trình duyệt không hỗ trợ WebGL");
+      //   return;
+      // }
+
       Cesium.Ion.defaultAccessToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZTY1N2NkNC03NjUyLTRjZWMtOGQ0MS1jZTI4MTQ3Zjk5YTUiLCJpZCI6Mjc2MjU3LCJpYXQiOjE3NTMyODAxODh9.dtI1O5YpwJx74URLAE8KyrJyk-f42tBoSfUACRRZ3Io";
       // Cesium.Ion.defaultAccessToken = "YOUR_TOKEN_HERE";
       const viewer = new Cesium.Viewer(cesiumContainerRef.current, {
+          contextOptions: {
+            webgl: {
+              preserveDrawingBuffer: false,
+              failIfMajorPerformanceCaveat: false,
+            },
+          },
         scene3DOnly: true,
         requestRenderMode: true,
+        maximumRenderTimeChange: Infinity, // giảm redraw không cần thiết
         timeline: false,
         animation: false,
         baseLayerPicker: false,
       });
+      // // ✅ Bắt sự kiện WebGL bị mất trên mobile
+      // viewer.scene.canvas.addEventListener("webglcontextlost", (event) => {
+      //   event.preventDefault();
+      //   alert("WebGL context lost. Vui lòng reload lại trang.");
+      // });
+
 
       viewerRef.current = viewer;
 
       const tileset = await Cesium.Cesium3DTileset.fromUrl(
         "https://gis.daces.vn/models/KTXHQG_KHUB_CESIUM/Scene/Production_2.json"
       );
-      tileset.maximumScreenSpaceError = 4;
-      tileset.maximumMemoryUsage = 2048;
+      tileset.maximumScreenSpaceError = 16;
+      tileset.dynamicScreenSpaceError = false;  // tắt auto giảm chi tiết
+      tileset.skipLevelOfDetail = false;        // giữ nguyên tile đã tải
+      tileset.preloadWhenHidden = true;         // không bỏ tile khi zoom ra
       viewer.scene.primitives.add(tileset);
       await tileset.readyPromise;
 
@@ -138,11 +161,18 @@ function MasterMap() {
 
     initCesium();
     return () => {
-      viewerRef.current?.destroy();
-      viewerRef.current = null;
+      if (viewerRef.current) {
+        viewerRef.current.destroy();
+        viewerRef.current = null;
+      }
       isInitialized.current = false;
     };
   }, []);
+
+    // ✅ Xóa cache Cesium
+  if (Cesium.Resource._Implementations) {
+    Cesium.Resource._Implementations.clearCache?.();
+  }
 
   // Gộp effect show/hide layer
   useEffect(() => {
