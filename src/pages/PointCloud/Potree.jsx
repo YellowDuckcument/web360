@@ -56,9 +56,7 @@ function Potree() {
 
         // Khởi tạo viewer 1 lần duy nhất
         if (!viewerRef.current) {
-          const viewer = new window.Potree.Viewer(
-            document.getElementById("potree_render_area")
-          );
+          const viewer = new window.Potree.Viewer(document.getElementById("potree_render_area"));
           viewerRef.current = viewer;
 
           viewer.setEDLEnabled(true);
@@ -77,49 +75,23 @@ function Potree() {
           });
 
           // Load Pointcloud
-          // window.Potree.loadPointCloud(
-          //   "/KTX/models/pointcloud/test2/metadata.json",
-          //   "Tòa nhà Gtel",
-          //   (e) => {
-          //     viewer.scene.addPointCloud(e.pointcloud);
+          window.Potree.loadPointCloud(
+            "/models/pointcloud/test02/metadata.json",
+            "Tòa nhà Gtel",
+            (e) => {
+              viewer.scene.addPointCloud(e.pointcloud);
 
-          //     const material = e.pointcloud.material;
-          //     material.size = 1;
-          //     material.pointSizeType = window.Potree.PointSizeType.ADAPTIVE;
+              const material = e.pointcloud.material;
+              material.size = 1;
+              material.pointSizeType = window.Potree.PointSizeType.ADAPTIVE;
 
-          //     e.pointcloud.position.x += 3;
-          //     e.pointcloud.position.y -= 3;
-          //     e.pointcloud.position.z += 4;
+              e.pointcloud.position.x += 3;
+              e.pointcloud.position.y -= 3;
+              e.pointcloud.position.z += 4;
 
-          //     viewer.fitToScreen();
-          //   }
-          // );
-
-          const pointCloudList = [
-            {
-              url: "/KTX/models/pointcloud/test1/metadata.json",
-              name: "Toà nhà 1",
-              position: [0, 0, 0],
-            },
-            {
-              url: "/KTX/models/pointcloud/test2/metadata.json",
-              name: "Toà nhà 2",
-              position: [10, 0, 0],
-            },
-          ];
-
-          pointCloudList.forEach((item) => {
-            window.Potree.loadPointCloud(item.url, item.name, (e) => {
-              const pc = e.pointcloud;
-              viewer.scene.addPointCloud(pc);
-
-              pc.material.size = 1;
-              pc.material.pointSizeType = window.Potree.PointSizeType.ADAPTIVE;
-
-              // Set position
-              pc.position.set(...item.position);
-            });
-          });
+              viewer.fitToScreen();
+            }
+          );
 
           // Thêm ánh sáng
           const directional = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -143,12 +115,9 @@ function Potree() {
       className="potree_container"
       style={{ position: "absolute", width: "100%", height: "100%" }}
     >
-      <div
-        id="potree_render_area"
-        style={{
-          backgroundImage: "url('/images/loading.gif')",
-        }}
-      />
+      <div id="potree_render_area" style={{
+    backgroundImage: "url('/images/loading.gif')"
+  }}/>
       <div id="potree_sidebar_container" />
     </div>
   );
