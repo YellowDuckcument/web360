@@ -56,7 +56,9 @@ function Potree() {
 
         // Khởi tạo viewer 1 lần duy nhất
         if (!viewerRef.current) {
-          const viewer = new window.Potree.Viewer(document.getElementById("potree_render_area"));
+          const viewer = new window.Potree.Viewer(
+            document.getElementById("potree_render_area")
+          );
           viewerRef.current = viewer;
 
           viewer.setEDLEnabled(true);
@@ -69,15 +71,15 @@ function Potree() {
           if (sidebar) sidebar.innerHTML = "";
 
           viewer.loadGUI(() => {
-            viewer.setLanguage("en");
+            viewer.setLanguage("vi");
             window.$("#menu_appearance").next().show();
             window.$("#menu_tools").next().show();
           });
 
           // Load Pointcloud
           window.Potree.loadPointCloud(
-            "/models/pointcloud/test02/metadata.json",
-            "Tòa nhà Gtel",
+            "/KTX/models/pointcloud/test2/metadata.json",
+            "PointCloud 1",
             (e) => {
               viewer.scene.addPointCloud(e.pointcloud);
 
@@ -115,9 +117,12 @@ function Potree() {
       className="potree_container"
       style={{ position: "absolute", width: "100%", height: "100%" }}
     >
-      <div id="potree_render_area" style={{
-    backgroundImage: "url('/images/loading.gif')"
-  }}/>
+      <div
+        id="potree_render_area"
+        style={{
+          backgroundImage: "url('/images/loading.gif')",
+        }}
+      />
       <div id="potree_sidebar_container" />
     </div>
   );
