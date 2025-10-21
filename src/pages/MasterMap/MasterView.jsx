@@ -121,7 +121,7 @@ function MasterMap() {
       viewerRef.current = viewer;
 
       const tileset = await Cesium.Cesium3DTileset.fromUrl(
-        "https://gis.daces.vn/models/KTXHQG_KHUB_CESIUM/Scene/Production_2.json"
+        "https://data3d.3dscan.vn/models/KTXHQG_KHUB_CESIUM/Scene/Production_2.json"
       );
       tileset.maximumScreenSpaceError = 16;
       tileset.dynamicScreenSpaceError = false;  // tắt auto giảm chi tiết
@@ -136,8 +136,8 @@ function MasterMap() {
 
       const wmtsLayer = viewer.imageryLayers.addImageryProvider(
         new Cesium.WebMapTileServiceImageryProvider({
-          url: "https://model.3dscan.vn/api_wmts/geoserver/KTX/gwc/service/wmts",
-          layer: "KTX:AnhTrucGiao",
+          url: "https://model.3dscan.vn/api_wmts/geoserver/HCM_KTXQHQG/gwc/service/wmts",
+          layer: "HCM_KTXQHQG:KhuB_TrucGiao",
           style: "",
           format: "image/png",
           tileMatrixSetID: "WebMercatorQuadx2",

@@ -1,4 +1,23 @@
+# Node modules (sẽ được cài lại trong container)
 node_modules
 npm-debug.log
-Dockerfile
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build output
+dist
+
+# Git files
+.git
+.gitignore
 .dockerignore
+
+# Editor / OS files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
